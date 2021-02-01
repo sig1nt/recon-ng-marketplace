@@ -1,6 +1,5 @@
 from recon.core.module import BaseModule
 from lxml.etree import fromstring
-from urllib.parse import quote_plus
 import ipaddress
 
 
@@ -9,16 +8,18 @@ class Module(BaseModule):
     meta = {
         'name': 'Whois Data Miner (ripe.net)',
         'author': 'Andrey Zhukov from USSC',
-        'version': '1.0',
+        'version': '1.1',
         'description': 'Uses the RIPE Whois to harvest companies, locations, netblocks, and contacts associated with the given company search string. Updates the respective tables with the results.',
         'dependencies': ['lxml'],
         'query': 'SELECT DISTINCT company FROM companies WHERE company IS NOT NULL',
     }
 
-    def module_run(self, searches):
-        for search in searches:
-            url = 'http://rest.db.ripe.net/search?source=ripe&query-string=%s' % (quote_plus(search))
-            response = self.request('GET', url)
+    def module_run(self, companies):
+        for company in companies:
+            url = 'https://rest.db.ripe.net/search'
+            params = {'source':'ripe',
+                      'query-string': company}
+            response = self.request('GET', url, params=params)
             if response.status_code != 200:
                 continue
             for _object in fromstring(response.content).xpath('//objects/object'):
